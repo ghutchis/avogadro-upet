@@ -1,0 +1,120 @@
+[project]
+name = "avogadro-upet"
+version = "0.1.0"
+description = "Energy models for Avogadro 2 using the UPET (PET-MAD, PET-SPICE, PET-OMat) ML potentials"
+authors = [{name = "Geoff Hutchison", email = "geoff.hutchison@gmail.com"}]
+license = "BSD-3-Clause"
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+# The "avogadro" wheel provides avogadro.energy, the binary protocol helper
+# this plugin builds on, so there is no copy of the protocol code to maintain
+# here. It brings numpy with it.
+dependencies = ["avogadro>=2.1.0", "ase>=3.23", "upet>=0.3.1"]
+
+# Avogadro runs a feature of this plugin as:
+#     pixi run avogadro-upet <identifier> --protocol binary-v1
+# The entry point name must begin with "avogadro-" for Avogadro to find it, and
+# by convention it is the plugin name itself.
+[project.scripts]
+avogadro-upet = "avogadro_upet:main"
+# Avogadro runs the "-setup" entry point once, after installing the plugin.
+avogadro-upet-setup = "avogadro_upet:setup"
+
+[build-system]
+build-backend = "hatchling.build"
+requires = ["hatchling"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/avogadro_upet"]
+
+# --- Pixi ------------------------------------------------------------------
+
+# .github/workflows/update-dependencies.yml checks PyPI daily for these packages.
+[tool.update-dependencies]
+track = ["avogadro", "upet"]
+
+[tool.pixi.workspace]
+channels = ["conda-forge"]
+platforms = ["osx-arm64", "linux-64"]
+
+[tool.pixi.dependencies]
+python = ">=3.11,<3.14"
+
+# Installing the plugin itself as an editable dependency is what lets Avogadro
+# invoke the entry point with `pixi run`.
+[tool.pixi.pypi-dependencies]
+avogadro_upet = { path = ".", editable = true }
+
+[tool.pixi.tasks]
+setup = "avogadro-upet-setup"
+
+# pytest lives in a separate environment so that it is not installed alongside
+# the plugin when Avogadro sets it up for a user. `pixi run test` finds the
+# task there automatically.
+[tool.pixi.feature.test.dependencies]
+pytest = "*"
+
+[tool.pixi.feature.test.tasks]
+test = "pytest"
+
+[tool.pixi.environments]
+default = { solve-group = "default" }
+test = { features = ["test"], solve-group = "default" }
+
+# --- Avogadro --------------------------------------------------------------
+
+[tool.avogadro]
+minimum-avogadro-version = "1.103"
+
+# Each feature is an entry in an array of tables, keyed by feature type. The
+# other supported types are electrostatic-models, file-formats, input-generators
+# and menu-commands.
+#
+# `protocol = "binary-v1"` selects the framed binary exchange implemented by
+# avogadro.energy. Omitting it selects the older line-based text protocol, which
+# cannot carry batches or Hessians.
+#
+# The support.* keys are promises Avogadro holds you to: it refuses to run the
+# model on a molecule outside them, so they must match what the code below
+# actually does.
+[[tool.avogadro.energy-models]]
+identifier = "PET-MAD-S"
+model-name = "PET-MAD-S"
+description = "Calculate PET-MAD-S v1.6.0 (r2SCAN) energies and gradients for molecules and crystals, neutral closed-shell only"
+input-format = "cjson"
+protocol = "binary-v1"
+support.gradients = true
+support.elements = "1-102"
+support.unit-cell = true
+support.ions = false
+support.radicals = false
+support.batch = false
+support.hessians = false
+
+[[tool.avogadro.energy-models]]
+identifier = "PET-SPICE"
+model-name = "PET-SPICE"
+description = "Calculate PET-SPICE-S v0.2.0 (wB97M-D3) energies and gradients for neutral organic molecules"
+input-format = "cjson"
+protocol = "binary-v1"
+support.gradients = true
+support.elements = "1, 6-9, 15-17, 35, 53"
+support.unit-cell = false
+support.ions = false
+support.radicals = false
+support.batch = false
+support.hessians = false
+
+[[tool.avogadro.energy-models]]
+identifier = "PET-OMat"
+model-name = "PET-OMat"
+description = "Calculate PET-OMat-S v1.0.0 (PBE, OMat24) energies and gradients for inorganic crystals"
+input-format = "cjson"
+protocol = "binary-v1"
+support.gradients = true
+support.elements = "1-83, 89-94"
+support.unit-cell = true
+support.ions = false
+support.radicals = false
+support.batch = false
+support.hessians = false

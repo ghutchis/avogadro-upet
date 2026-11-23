@@ -1,0 +1,31 @@
+# Written by copier so that `copier update` can pull in later template
+# improvements. Do not edit by hand; commit it alongside the project.
+_commit: v0.1.0
+_src_path: avogadro-energy-template
+author_email: geoff.hutchison@gmail.com
+author_name: Geoff Hutchison
+build_backend: hatchling
+conda_dependencies: ''
+description: An energy model for Avogadro 2
+example_backend: ase
+github_user: ghutchis
+include_charges: false
+include_setup: true
+include_tests: true
+include_user_options: false
+license: BSD-3-Clause
+model_description: PET-MAD-S
+model_identifier: PET-MAD-S
+model_name: PET-MAD-S
+platforms:
+- osx-arm64
+- linux-64
+plugin_name: avogadro-upet
+pypi_dependencies: upet>=0.3.1
+python_requires: '3.11'
+support_batch: false
+support_elements: 1-102
+support_hessians: false
+support_ions: false
+support_radicals: false
+support_unit_cell: true
